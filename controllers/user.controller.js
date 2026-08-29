@@ -5,7 +5,7 @@ import { configDotenv } from "dotenv"
 
 configDotenv()
 
-export const login = (req, res) => {
+export const login = async(req, res) => {
     const {email, password} = req.body
     if(!email || !password) return res.status(400).json({ message: 'fields are required' })
     try{
@@ -16,9 +16,10 @@ export const login = (req, res) => {
         const accessToken = jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30m' })
         const refreshToken = jwt.sign({ id: user._id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '15d' })
         res.cookie('refreshToken', refreshToken, {
-            maxAge: '7d',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
             httpOnly: true,
-            strict: 'sameSite'
+            sameSite: 'strict',
+            secure: true
         })
 
         return res.status(200).json({ message: `welcome ${user.username}`, accessToken })
@@ -28,7 +29,7 @@ export const login = (req, res) => {
     }
 }
 
-export const register = (req, res) => {
+export const register = async(req, res) => {
     const salt = await bcrypt.genSalt(10)
     const { username, email, password } = req.body
     if(!email || !password || !username) return res.status(400).json({ message: 'fields are required' })
@@ -46,9 +47,10 @@ export const register = (req, res) => {
         const accessToken = jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30m' })
         const refreshToken = jwt.sign({ id: user._id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '15d' })
         res.cookie('refreshToken', refreshToken, {
-            maxAge: '7d',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
             httpOnly: true,
-            strict: 'sameSite'
+            sameSite: 'strict',
+            secure: true
         })
 
         return res.status(201).json({ message: `Account for ${user.username} and with ${user.email} was created successfully`, accessToken })
@@ -58,9 +60,15 @@ export const register = (req, res) => {
     }
 }
 
-export const logout = (req, res) => {
+export const logout = async(req, res) => {
     try{
+        res.clearCookie('refreshToken', {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'strict'
+        })
 
+        return res.status(200).json({ message: 'Logged out successfully' })
     }catch(err){
         console.log(err)
         return res.status(500).json({ error: 'Something went wrong' })
