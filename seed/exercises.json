@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Push-up",
+    "description": "Upper body strength exercise using bodyweight",
+    "category": "strength",
+    "muscleGroup": "chest"
+  },
+  {
+    "name": "Squat",
+    "description": "Lower body strength exercise using bodyweight or added weight",
+    "category": "strength",
+    "muscleGroup": "legs"
+  },
+  {
+    "name": "Running",
+    "description": "Cardiovascular endurance exercise",
+    "category": "cardio",
+    "muscleGroup": "legs"
+  },
+  {
+    "name": "Plank",
+    "description": "Core stability exercise held in a static position",
+    "category": "strength",
+    "muscleGroup": "core"
+  },
+  {
+    "name": "Deadlift",
+    "description": "Compound strength exercise lifting weight from the ground",
+    "category": "strength",
+    "muscleGroup": "back"
+  },
+  {
+    "name": "Jumping Jacks",
+    "description": "Full-body cardio warm-up exercise",
+    "category": "cardio",
+    "muscleGroup": "full body"
+  },
+  {
+    "name": "Bicep Curl",
+    "description": "Isolation exercise targeting the biceps using dumbbells",
+    "category": "strength",
+    "muscleGroup": "arms"
+  },
+  {
+    "name": "Hamstring Stretch",
+    "description": "Static stretch to improve hamstring flexibility",
+    "category": "flexibility",
+    "muscleGroup": "legs"
+  }
+]
