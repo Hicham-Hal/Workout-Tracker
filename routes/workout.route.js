@@ -4,7 +4,7 @@ import { addPlan, deletePlan, updatePlan } from '../controllers/workout.controll
 const route = express.Router()
 
 route.post('/add', addPlan)
-route.post('/update', updatePlan)
-route.post('/delete', deletePlan)
+route.put('/update/:id', updatePlan)
+route.delete('/delete', deletePlan)
 
 export default route
