@@ -11,13 +11,14 @@ const planSchema = new mongoose.Schema({
     owner: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
+        required: false
     },
     title: { type: String, required: true },
     status: {
         type: String,
         enum: ['pending', 'active', 'completed'],
-        required: true
+        required: true,
+        default: 'pending'
     },
     exercises: [{
         exercise: { type: mongoose.Schema.Types.ObjectId, ref: 'Exercise', required: true },
