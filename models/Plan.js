@@ -2,7 +2,7 @@ import mongoose from 'mongoose'
 
 
 const commentSchema = new mongoose.Schema({
-    author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     comment: { type: String , required: true}
 }, {timestamps: true})
 
@@ -11,7 +11,7 @@ const planSchema = new mongoose.Schema({
     owner: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: false
+        required: true
     },
     title: { type: String, required: true },
     status: {
