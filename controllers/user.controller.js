@@ -74,3 +74,15 @@ export const logout = async(req, res) => {
         return res.status(500).json({ error: 'Something went wrong' })
     }
 }
+
+export const refreshToken = async(req, res) => {
+    try{
+        const token = req.cookies.refreshToken;
+        const decode = await jwt.verify(token, process.env.REFRESH_TOKEN_SECRET)
+        const accessToken = jwt.sign({ id: decode.id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30m' })
+        return res.status(200).json({ accessToken })
+    }catch(err){
+        console.log(err)
+        return res.status(500).json({ error: 'Something went wrongs' })
+    }
+}
