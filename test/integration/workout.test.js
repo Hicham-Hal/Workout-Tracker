@@ -110,3 +110,29 @@ describe('GET /get plans', () => {
         expect(res.body.plans.length).toBe(4)
     })
 })
+
+describe('PUT /update status', () => {
+    it('update status successfully', async() => {
+        const user = await createUser()
+        const plan = await createPlan(user.token, 1)
+
+        const res = await request(app).put(`/plan/${plan._id}/status`).set('Authorization', `Bearer ${user.token}`).send({
+            status: 'completed'
+        })
+
+        expect(res.status).toBe(200)
+        expect(res.body.plan).toBeDefined()
+    })
+
+    it('reject updating status if it is not one of pending, active, completed', async() => {
+        const user = await createUser()
+        const plan = await createPlan(user.token, 1)
+
+        const res = await request(app).put(`/plan/${plan._id}/status`).set('Authorization', `Bearer ${user.token}`).send({
+            status: 'ok'
+        })
+
+        expect(res.status).toBe(400)
+    })
+})
+
