@@ -93,12 +93,49 @@ export const deleteComment = async(req, res) => {
 
 export const getPlans = async(req, res) => {
     const {state} = req.query;
+    let plans;
     try{
-        const plans = await Plan.find({ owner: req.user.id })
+        if(state){
+            plans = await Plan.find({ owner: req.user.id, status: state }).sort({ createdAt: -1 })
+        }else{
+            plans = await Plan.find({ owner: req.user.id }).sort({ createdAt: -1 })
+        }
         if(!plans) return res.status(401).json({ message: 'can\'t get plans' })
         return res.status(200).json({ plans })
     }catch(err){
         console.log(err)
         return res.status(500).json({ error: "Something went wrong" })
+    }
+}
+
+export const updateStatus = async(req, res) => {
+    const {id} = req.params
+    const {status} = req.body
+    try{
+        const plan = await Plan.findOne({ _id: id, owner: req.user.id })
+        if(!plan) return res.status(404).json({ message: 'Plan not found' })
+        plan.status = status
+        await plan.save()
+        return res.status(200).json({ plan })
+    }catch(err){
+        console.log(err)
+        return res.status(500).json({ error: 'Something went wrong' })
+    }
+}
+
+export const getReport = async(req, res) => {
+    const {from, to} = req.query;
+    const fromDate = new Date(from)
+    const toDate = new Date(to)
+    const fromISO = fromDate.toISOString()
+    const toISO = toDate.toISOString()
+    try{
+        const plans = await Plan.find({ owner: req.user.id, status: 'completed', scheduledAt: {$gte: fromISO, $lte: toISO} })
+        if(!plans) return res.status(404).json({ message: 'Plan not found' })
+
+        return res.status(200).json({ totalWorkoutCompleted: plans.length })
+    }catch(err){
+        console.log(err)
+        return res.status(500).json({ error: 'Something went wrong' })
     }
 }
