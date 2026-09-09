@@ -65,6 +65,7 @@ export const addComment = async(req, res) => {
         if(!plan) return res.status(404).json({ message: 'Plan not found' })
         plan.comments = [...plan.comments, commentObj]
         await plan.save()
+        console.log(plan.comments)
         return res.status(201).json({ comments: plan.comments })
     }catch(err){
         console.log(err)
@@ -73,16 +74,17 @@ export const addComment = async(req, res) => {
 }
 
 export const deleteComment = async(req, res) => {
-    const {id} = req.body
     const {planId} = req.params
+    const {id} = req.body
     try{
-        const plan = await Plan.findOne({ _id: id, owner: req.user.id })
+        const plan = await Plan.findOne({ _id: planId, owner: req.user.id })
         if(!plan) return res.status(404).json({ message: 'plan not found' })
-        const comment = plan.comments.find(c => c._id === id)
-        if((req.user.id.toString() !== comment.author.toString()) && (req.user.id.toString() !== plan.owner.toString())) return res.status(403).json({ message: 'you can not delete user\' else comment' })
+        const comment = plan.comments.find(c => c._id.toString() === id.toString())
+        console.log(comment)
+        // if((req.user.id.toString() !== comment.author.toString()) && (req.user.id.toString() !== plan.owner.toString())) return res.status(403).json({ message: 'you can not delete user\' else comment' })
         plan.comments = plan.comments.filter(c => c._id.toString() !== comment._id.toString())
         await plan.save()
-        return res.status(200).json({ plan })
+        return res.status(204).send()
     }catch(err){
         console.log(err)
         return res.status(500).json({ error: 'Something went wrong' })
