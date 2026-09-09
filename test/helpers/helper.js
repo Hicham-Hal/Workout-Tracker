@@ -7,7 +7,7 @@ export const createUser = async(override = {}) => {
     counter++
 
     const payload = {
-        name: `User ${counter}`,
+        username: `User ${counter}`,
         email: `user${counter}@gmail.com`,
         password: '1234user',
         ...override
@@ -17,7 +17,9 @@ export const createUser = async(override = {}) => {
 
     return {
         token: res.body.accessToken,
-        user: payload.name,
+        email: payload.email,
+        password: payload.password,
+        name: payload.name,
         rawResponse: res
     }
 }
