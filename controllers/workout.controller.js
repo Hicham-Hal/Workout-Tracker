@@ -132,8 +132,18 @@ export const getReport = async(req, res) => {
     try{
         const plans = await Plan.find({ owner: req.user.id, status: 'completed', scheduledAt: {$gte: fromISO, $lte: toISO} })
         if(!plans) return res.status(404).json({ message: 'Plan not found' })
+        let exercisesPlans = []
+        let sum = 0;
+        plans.forEach(plan => {
+            exercisesPlans = [...plan.exercises]
+        })
+        console.log(exercisesPlans)
+        const exercises = exercisesPlans.forEach(element => {
+            sum += element.sets * element.reps * element.weight  
+        })
 
-        return res.status(200).json({ totalWorkoutCompleted: plans.length })
+
+        return res.status(200).json({ totalWorkoutCompleted: plans.length, totalVolume: sum })
     }catch(err){
         console.log(err)
         return res.status(500).json({ error: 'Something went wrong' })
