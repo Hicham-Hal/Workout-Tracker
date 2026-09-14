@@ -130,22 +130,149 @@ export const getReport = async(req, res) => {
     const fromISO = fromDate.toISOString()
     const toISO = toDate.toISOString()
     try{
-        const plans = await Plan.find({ owner: req.user.id, status: 'completed', scheduledAt: {$gte: fromISO, $lte: toISO} })
-        if(!plans) return res.status(404).json({ message: 'Plan not found' })
-        let exercisesPlans = []
-        let sum = 0;
-        plans.forEach(plan => {
-            exercisesPlans = [...plan.exercises]
-        })
-        console.log(exercisesPlans)
-        const exercises = exercisesPlans.forEach(element => {
-            sum += element.sets * element.reps * element.weight  
-        })
+        const [result] = await Plan.aggregate([
+            {
+                $match: {
+                    owner: new mongoose.Types.ObjectId(req.use.id),
+                    status: 'completed',
+                    scheduledAt: { $gte: fromISO, $lte: toISO }
+                }
+            },
+            { $unwind: '$exercises' },
+            {
+                $lookup: {
+                    from: 'exercises',
+                    localField: 'exercises.exercise',
+                    foreignField: '_id',
+                    as: 'exerciseInfo'
+                }
+            },
+            { $unwind: 'exerciseInfo' },
+            {
+                $addFields: {
+                    volume: {
+                        $multiply: [
+                            'exercises.sets',
+                            'exercises.reps',
+                            { $ifNull: ['$exercises.weight', 0] }
+                        ]
+                    }
+                }
+            },
+            {
+                $facet: {
+                    totalWorkoutsCompleted: [
+                        { $group: { _id: '$_id' } },
+                        { $count: 'count' }
+                    ],
+                    totalVolume: [
+                        { $group: { _id: null, total: { $sum: '$volume' } } }
+                    ],
+                    byExercise: [
+                        { $group: { _id: '$exerciseInfo.name', session: {$sum: 1}, maxWeight: { $max: '$exercises.weight' }, totalVolume: { $sum: '$volume' } } },
+                        { $project: { _id: 0, exercise: '$_id', sessions: 1, maxWeight: 1, totalVolume: 1 } }
+                    ],
+                    byCategory: [
+                        { $group: { _id: '$exerciseInfo.category', count: { $sum: 1 } } }
+                    ]
+                }
+            }
+        ])
+        const byCategory = {}
+        result.byCategory.forEach(c => { byCategory[c._id] = c.count })
+        
 
-
-        return res.status(200).json({ totalWorkoutCompleted: plans.length, totalVolume: sum })
+        return res.status(200).json({
+            totalWorkoutsCompleted: result.totalWorkoutsCompleted[0]?.count || 0,
+            totalVolume: result.totalVolume[0]?.total || 0,
+            byExercise: result.byExercise,
+            byCategory
+        })
     }catch(err){
         console.log(err)
         return res.status(500).json({ error: 'Something went wrong' })
+    }
+}
+
+import mongoose from 'mongoose'
+import Plan from '../models/Plan.js'
+
+export const getReport = async (req, res) => {
+    try {
+        const { from, to } = req.query
+        const fromDate = new Date(from)
+        const toDate = new Date(to)
+
+        if (isNaN(fromDate) || isNaN(toDate)) {
+            return res.status(400).json({ message: 'Invalid from/to date' })
+        }
+
+        const [result] = await Plan.aggregate([
+            {
+                $match: {
+                    owner: new mongoose.Types.ObjectId(req.user.id),
+                    status: 'completed',
+                    scheduledAt: { $gte: fromDate, $lte: toDate }
+                }
+            },
+            { $unwind: '$exercises' },
+            {
+                $lookup: {
+                    from: 'exercises',                 // collection name, lowercase plural
+                    localField: 'exercises.exercise',
+                    foreignField: '_id',
+                    as: 'exerciseInfo'
+                }
+            },
+            { $unwind: '$exerciseInfo' },
+            {
+                $addFields: {
+                    volume: {
+                        $multiply: [
+                            '$exercises.sets',
+                            '$exercises.reps',
+                            { $ifNull: ['$exercises.weight', 0] }
+                        ]
+                    }
+                }
+            },
+            {
+                $facet: {
+                    totalWorkoutsCompleted: [
+                        { $group: { _id: '$_id' } },   // distinct plans, since exercises were unwound
+                        { $count: 'count' }
+                    ],
+                    totalVolume: [
+                        { $group: { _id: null, total: { $sum: '$volume' } } }
+                    ],
+                    byExercise: [
+                        {
+                            $group: {
+                                _id: '$exerciseInfo.name',
+                                sessions: { $sum: 1 },
+                                maxWeight: { $max: '$exercises.weight' },
+                                totalVolume: { $sum: '$volume' }
+                            }
+                        },
+                        { $project: { _id: 0, exercise: '$_id', sessions: 1, maxWeight: 1, totalVolume: 1 } }
+                    ],
+                    byCategory: [
+                        { $group: { _id: '$exerciseInfo.category', count: { $sum: 1 } } }
+                    ]
+                }
+            }
+        ])
+
+        const byCategory = {}
+        result.byCategory.forEach(c => { byCategory[c._id] = c.count })
+
+        res.status(200).json({
+            totalWorkoutsCompleted: result.totalWorkoutsCompleted[0]?.count || 0,
+            totalVolume: result.totalVolume[0]?.total || 0,
+            byExercise: result.byExercise,
+            byCategory
+        })
+    } catch (err) {
+        res.status(500).json({ message: err.message })
     }
 }
