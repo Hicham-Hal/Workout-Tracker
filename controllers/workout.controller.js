@@ -1,4 +1,5 @@
 import Plan from "../models/Plan.js"
+import mongoose from 'mongoose'
 
 export const addPlan = async(req, res)=>{
     const { title, time, exercises } = req.body
@@ -124,36 +125,39 @@ export const updateStatus = async(req, res) => {
 }
 
 export const getReport = async(req, res) => {
-    const {from, to} = req.query;
-    const fromDate = new Date(from)
-    const toDate = new Date(to)
-    const fromISO = fromDate.toISOString()
-    const toISO = toDate.toISOString()
-    try{
+    try {
+        const { from, to } = req.query
+        const fromDate = new Date(from)
+        const toDate = new Date(to)
+
+        if (isNaN(fromDate) || isNaN(toDate)) {
+            return res.status(400).json({ message: 'Invalid from/to date' })
+        }
+
         const [result] = await Plan.aggregate([
             {
                 $match: {
-                    owner: new mongoose.Types.ObjectId(req.use.id),
+                    owner: new mongoose.Types.ObjectId(req.user.id),
                     status: 'completed',
-                    scheduledAt: { $gte: fromISO, $lte: toISO }
+                    scheduledAt: { $gte: fromDate, $lte: toDate }
                 }
             },
             { $unwind: '$exercises' },
             {
                 $lookup: {
-                    from: 'exercises',
+                    from: 'exercises',                 // collection name, lowercase plural
                     localField: 'exercises.exercise',
                     foreignField: '_id',
                     as: 'exerciseInfo'
                 }
             },
-            { $unwind: 'exerciseInfo' },
+            { $unwind: '$exerciseInfo' },
             {
                 $addFields: {
                     volume: {
                         $multiply: [
-                            'exercises.sets',
-                            'exercises.reps',
+                            '$exercises.sets',
+                            '$exercises.reps',
                             { $ifNull: ['$exercises.weight', 0] }
                         ]
                     }
@@ -162,14 +166,21 @@ export const getReport = async(req, res) => {
             {
                 $facet: {
                     totalWorkoutsCompleted: [
-                        { $group: { _id: '$_id' } },
+                        { $group: { _id: '$_id' } },   // distinct plans, since exercises were unwound
                         { $count: 'count' }
                     ],
                     totalVolume: [
                         { $group: { _id: null, total: { $sum: '$volume' } } }
                     ],
                     byExercise: [
-                        { $group: { _id: '$exerciseInfo.name', session: {$sum: 1}, maxWeight: { $max: '$exercises.weight' }, totalVolume: { $sum: '$volume' } } },
+                        {
+                            $group: {
+                                _id: '$exerciseInfo.name',
+                                sessions: { $sum: 1 },
+                                maxWeight: { $max: '$exercises.weight' },
+                                totalVolume: { $sum: '$volume' }
+                            }
+                        },
                         { $project: { _id: 0, exercise: '$_id', sessions: 1, maxWeight: 1, totalVolume: 1 } }
                     ],
                     byCategory: [
@@ -178,18 +189,17 @@ export const getReport = async(req, res) => {
                 }
             }
         ])
+
         const byCategory = {}
         result.byCategory.forEach(c => { byCategory[c._id] = c.count })
-        
 
-        return res.status(200).json({
+        res.status(200).json({
             totalWorkoutsCompleted: result.totalWorkoutsCompleted[0]?.count || 0,
             totalVolume: result.totalVolume[0]?.total || 0,
             byExercise: result.byExercise,
             byCategory
         })
-    }catch(err){
-        console.log(err)
-        return res.status(500).json({ error: 'Something went wrong' })
+    } catch (err) {
+        res.status(500).json({ message: err.message })
     }
 }
