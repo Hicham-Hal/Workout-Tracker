@@ -60,7 +60,7 @@ export const deletePlan = async(req, res)=>{
 export const addComment = async(req, res) => {
     const {id} = req.params
     const {commentObj} = req.body
-    if(!commentObj.comment) return res.status(401).json({ message: 'You should provide a comment to submit' })
+    if(!commentObj || !commentObj.comment) return res.status(401).json({ message: 'You should provide a comment to submit' })
     try{
         const plan = await Plan.findOne({ _id: id, owner: req.user.id })
         if(!plan) return res.status(404).json({ message: 'Plan not found' })
@@ -82,7 +82,7 @@ export const deleteComment = async(req, res) => {
         const plan = await Plan.findOne({ _id: planId, owner: req.user.id })
         if(!plan) return res.status(404).json({ message: 'plan not found' })
         const comment = plan.comments.find(c => c._id.toString() === id.toString())
-        console.log(comment)
+        if(!comment) return res.status(404).json({ message: "Comment not found" })
         // if((req.user.id.toString() !== comment.author.toString()) && (req.user.id.toString() !== plan.owner.toString())) return res.status(403).json({ message: 'you can not delete user\' else comment' })
         plan.comments = plan.comments.filter(c => c._id.toString() !== comment._id.toString())
         await plan.save()
@@ -201,18 +201,19 @@ export const getReport = async(req, res) => {
             byCategory
         })
     } catch (err) {
-        res.status(500).json({ message: err.message })
+        console.log(err)
+        return res.status(500).json({ err: 'Something went wrong here' })
     }
 }
 
 export const getPlan = async(req, res) => {
     const {id} = req.params
     try{
-        const plan = await Plan.findById(id)
+        const plan = await Plan.find({ _id: id, owner: req.user.id })
         if(!plan) return res.status(404).json({ message: "plan not found" })
         return res.status(200).json({ plan })
     }catch(err){
         console.log(err)
-        return res.status(500).json(req, res)
+        return res.status(500).json({ err: 'Something went wrong here' })
     }
 }
