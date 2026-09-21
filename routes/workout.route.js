@@ -14,6 +14,6 @@ route.delete('/:planId', verifyToken, deleteComment)
 route.get('/', verifyToken, getPlans)
 route.put('/:id/status', verifyToken, updateStatusValidator, validate, updateStatus )
 route.get('/report', verifyToken, getReport)
-route.get('/plan/:id', verifyToken, getPlan)
+route.get('/:id', verifyToken, getPlan)
 
 export default route
