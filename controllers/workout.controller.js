@@ -98,9 +98,9 @@ export const getPlans = async(req, res) => {
     let plans;
     try{
         if(state){
-            plans = await Plan.find({ owner: req.user.id, status: state }).sort({ createdAt: -1 })
+            plans = await Plan.find({ owner: req.user.id, status: state }).sort({ scheduledAt: -1 })
         }else{
-            plans = await Plan.find({ owner: req.user.id }).sort({ createdAt: -1 })
+            plans = await Plan.find({ owner: req.user.id }).sort({ scheduledAt: -1 })
         }
         if(!plans) return res.status(401).json({ message: 'can\'t get plans' })
         return res.status(200).json({ plans })
