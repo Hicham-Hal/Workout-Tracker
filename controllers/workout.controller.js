@@ -77,6 +77,7 @@ export const addComment = async(req, res) => {
 export const deleteComment = async(req, res) => {
     const {planId} = req.params
     const {id} = req.body
+    if(!id) return res.status(404).json({ message: 'you should provide the comment id' })
     try{
         const plan = await Plan.findOne({ _id: planId, owner: req.user.id })
         if(!plan) return res.status(404).json({ message: 'plan not found' })
@@ -201,5 +202,17 @@ export const getReport = async(req, res) => {
         })
     } catch (err) {
         res.status(500).json({ message: err.message })
+    }
+}
+
+export const getPlan = async(req, res) => {
+    const {id} = req.params
+    try{
+        const plan = await Plan.findById(id)
+        if(!plan) return res.status(404).json({ message: "plan not found" })
+        return res.status(200).json({ plan })
+    }catch(err){
+        console.log(err)
+        return res.status(500).json(req, res)
     }
 }
