@@ -1,4 +1,4 @@
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 
 const STATUS = ['pending', 'active', 'completed']
 
@@ -7,4 +7,9 @@ export const updateStatusValidator = [
         .trim()
         .notEmpty().withMessage('Status is required')
         .isIn(STATUS).withMessage(`Status must be one of: ${STATUS.join(', ')}`)
+]
+
+export const getPlanValidator = [
+    param('id')
+        .isMongoId().withMessage('Should be a valid id')
 ]
