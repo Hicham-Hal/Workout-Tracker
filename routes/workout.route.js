@@ -1,7 +1,7 @@
 import express from 'express'
 import { addComment, addPlan, deleteComment, deletePlan, getPlan, getPlans, getReport, updatePlan, updateStatus } from '../controllers/workout.controller.js'
 import { verifyToken } from '../middlewares/verifyToken.js'
-import { updateStatusValidator } from '../validators/workout.validator.js'
+import { getPlanValidator, updateStatusValidator } from '../validators/workout.validator.js'
 import { validate } from '../validators/validate.js'
 
 const route = express.Router()
@@ -14,6 +14,6 @@ route.delete('/:planId', verifyToken, deleteComment)
 route.get('/', verifyToken, getPlans)
 route.put('/:id/status', verifyToken, updateStatusValidator, validate, updateStatus )
 route.get('/report', verifyToken, getReport)
-route.get('/:id', verifyToken, getPlan)
+route.get('/:id', verifyToken, getPlanValidator, validate, getPlan)
 
 export default route
