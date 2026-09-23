@@ -132,3 +132,50 @@ paths:
           description: Invalid email or password
         '500':
           description: Server error
+  /plan/add:
+    post:
+      summary: Create a new workout plan
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, time, exercises]
+              properties:
+                title:
+                  type: string
+                time: 
+                  type: string
+                  format: date-time
+                exercises:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      exercise:
+                        type: string
+                      sets: 
+                        type: integer
+                      reps:
+                        type: integer
+                      weight: 
+                        type: number
+      responses:
+        '201':
+          description: Plan created
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  newPlan:
+                    $ref: '#/components/schemas/Plan'
+        '400':
+          description: Missing required fields
+        '401':
+          description: Missing or invalid access token
+        '500':
+          description: Server error
