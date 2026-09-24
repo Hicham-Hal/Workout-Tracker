@@ -179,3 +179,22 @@ paths:
           description: Missing or invalid access token
         '500':
           description: Server error
+  /plan:
+    get:
+      summary: Getting workout plan
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: state
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pending, active, completed]
+      responses:
+        '200':
+          description: return plans
+        '401':
+          description: can't get plans
+        '500':
+          description: server error
