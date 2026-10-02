@@ -124,6 +124,18 @@ export const updateStatus = async(req, res) => {
     }
 }
 
+export const getPlan = async(req, res) => {
+    const {id} = req.params
+    try{
+        const plan = await Plan.findOne({ _id: id, owner: req.user.id })
+        if(!plan) return res.status(404).json({ message: "plan not found" })
+        return res.status(200).json({ plan })
+    }catch(err){
+        console.log(err)
+        return res.status(500).json({ err: 'Something went wrong here' })
+    }
+}
+
 export const getReport = async(req, res) => {
     try {
         const { from, to } = req.query
@@ -200,18 +212,6 @@ export const getReport = async(req, res) => {
             byCategory
         })
     } catch (err) {
-        console.log(err)
-        return res.status(500).json({ err: 'Something went wrong here' })
-    }
-}
-
-export const getPlan = async(req, res) => {
-    const {id} = req.params
-    try{
-        const plan = await Plan.findOne({ _id: id, owner: req.user.id })
-        if(!plan) return res.status(404).json({ message: "plan not found" })
-        return res.status(200).json({ plan })
-    }catch(err){
         console.log(err)
         return res.status(500).json({ err: 'Something went wrong here' })
     }
